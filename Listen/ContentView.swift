@@ -9,12 +9,8 @@ import SwiftUI
 
 struct ContentView: View {
     var body: some View {
-        VStack {
-            
-            Text("Welcome to Listen")
-            Text("This App will listen you.")
-        }
-        .padding()
+        HomeContentView()
+            .ignoresSafeArea()
     }
 }
 
