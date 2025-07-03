@@ -5,28 +5,108 @@ struct DiaryEditorView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var title: String = ""
     @State private var content: String = ""
+    @State private var selectedMood: String = ""
+    @State private var date: Date = Date()
+    
+    let moods = ["🥲", "😌", "😐", "😊", "😄"]
     
     var body: some View {
         NavigationView {
-            Form {
-                Section(header: Text("Title")) {
-                    TextField("Title", text: $title)
+            ScrollView {
+                VStack(alignment: .leading, spacing: 20) {
+                    // Date and Change Date
+                    HStack {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(date, style: .date)
+                                .font(.title3).bold()
+                            Text(Calendar.current.isDateInToday(date) ? "Today" : "")
+                                .font(.caption)
+                                .foregroundColor(.gray)
+                        }
+                        Spacer()
+                        Button(action: {}) {
+                            HStack {
+                                Image(systemName: "calendar")
+                                Text("Change Date")
+                            }
+                        }
+                        .buttonStyle(.bordered)
+                        .disabled(true) // For now, date picker not implemented
+                    }
+                    .padding(.top)
+                    
+                    // Mood selection
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("How are you feeling today?")
+                            .font(.subheadline)
+                        HStack(spacing: 20) {
+                            ForEach(moods, id: \.self) { mood in
+                                Button(action: { selectedMood = mood }) {
+                                    ZStack {
+                                        Text(mood)
+                                            .font(.system(size: 36))
+                                        if selectedMood == mood {
+                                            Circle()
+                                                .stroke(Color.accentColor, lineWidth: 3)
+                                                .frame(width: 44, height: 44)
+                                        }
+                                    }
+                                }
+                                .buttonStyle(.plain)
+                            }
+                        }
+                        .padding(8)
+                        .background(Color(.systemGray6))
+                        .cornerRadius(12)
+                    }
+                    
+                    // Title
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Title (Optional)")
+                            .font(.subheadline)
+                        TextField("Give your entry a title...", text: $title)
+                            .textFieldStyle(.roundedBorder)
+                    }
+                    
+                    // Content
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Your thoughts")
+                            .font(.subheadline)
+                        TextEditor(text: $content)
+                            .frame(height: 180)
+                            .padding(8)
+                            .background(Color(.systemGray6))
+                            .cornerRadius(12)
+                            .overlay(
+                                Group {
+                                    if content.isEmpty {
+                                        Text("What's on your mind today? Write about your day, feelings, experiences...")
+                                            .foregroundColor(.gray)
+                                            .padding(12)
+                                            .allowsHitTesting(false)
+                                    }
+                                }, alignment: .topLeading
+                            )
+                    }
                 }
-                Section(header: Text("Content")) {
-                    TextEditor(text: $content)
-                        .frame(height: 200)
-                }
+                .padding()
             }
-            .navigationTitle("New Entry")
+            .navigationTitle("Write Entry")
+            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
-                    Button("Cancel") { dismiss() }
+                    Button(action: { dismiss() }) {
+                        Image(systemName: "chevron.left")
+                    }
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Save") {
-                        viewModel.addEntry(title: title, content: content)
+                    Button(action: {
+                        viewModel.addEntry(title: title, content: content, mood: selectedMood)
                         dismiss()
-                    }.disabled(title.isEmpty || content.isEmpty)
+                    }) {
+                        Image(systemName: "checkmark")
+                    }
+                    .disabled(content.isEmpty)
                 }
             }
         }
