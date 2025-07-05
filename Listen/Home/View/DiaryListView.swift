@@ -9,9 +9,6 @@ struct DiaryListView: View {
     @State private var showAllEntries = false
     @State private var navigateToWriteEntry = false
     
-    // Example moods
-    let moods = ["🥲", "😌", "😐", "😊", "😄"]
-    
     init() {
         // Use the shared view model from the coordinator
         _viewModel = ObservedObject(wrappedValue: AppCoordinator().sharedDiaryViewModel)
@@ -88,24 +85,6 @@ struct DiaryListView: View {
                     }
                     .padding(.horizontal)
                     
-                    
-                    // Mood Selection
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("How are you feeling today?")
-                            .font(.subheadline)
-                        HStack(spacing: 16) {
-                            ForEach(moods, id: \ .self) { mood in
-                                Button(action: { selectedMood = mood }) {
-                                    Text(mood)
-                                        .font(.largeTitle)
-                                        .opacity(selectedMood == mood ? 1 : 0.5)
-                                }
-                                .buttonStyle(.plain)
-                            }
-                        }
-                    }
-                    .padding(.horizontal)
-                    
                     // Recent Entries
                     HStack {
                         Text("Recent Entries")
@@ -117,7 +96,7 @@ struct DiaryListView: View {
                     .padding(.horizontal)
                     
                     VStack(spacing: 8) {
-                        let recentEntries = Array(viewModel.entries)
+                        let recentEntries = Array(viewModel.entries.prefix(5))
                         if recentEntries.isEmpty {
                             Text("No recent entries.")
                                 .foregroundColor(.gray)
@@ -152,7 +131,7 @@ struct DiaryListView: View {
                 }
             }
             .sheet(item: $selectedEntry) { entry in
-                DiaryDetailView(entry: entry, viewModel: viewModel)
+                DiaryDetailView(viewModel: viewModel, entryId: entry.id)
             }
             .sheet(isPresented: $showAllEntries) {
                 AllEntriesView(viewModel: viewModel, onSelect: { entry in
@@ -188,7 +167,7 @@ struct AllEntriesView: View {
     
     var body: some View {
         NavigationView {
-            List(viewModel.entries.filter { !Calendar.current.isDateInToday($0.date) }) { entry in
+            List(viewModel.entries) { entry in
                 Button(action: { onSelect(entry) }) {
                     VStack(alignment: .leading, spacing: 4) {
                         Text(entry.date, style: .date)

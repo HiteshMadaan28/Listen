@@ -40,7 +40,7 @@ struct CalendarView: View {
             }
             .navigationTitle("Calendar")
             .sheet(item: $selectedEntry) { entry in
-                DiaryDetailView(entry: entry, viewModel: viewModel)
+                DiaryDetailView(viewModel: viewModel, entryId: entry.id)
             }
         }
     }

@@ -1,17 +1,17 @@
 import SwiftUI
 
 struct DiaryEditEntryView: View {
-    let entry: DiaryEntry
+    @Binding var entry: DiaryEntry
     @ObservedObject var viewModel: DiaryViewModel
     @Environment(\.dismiss) private var dismiss
     @State private var title: String
     @State private var content: String
     
-    init(entry: DiaryEntry, viewModel: DiaryViewModel) {
-        self.entry = entry
+    init(entry: Binding<DiaryEntry>, viewModel: DiaryViewModel) {
+        self._entry = entry
         self.viewModel = viewModel
-        _title = State(initialValue: entry.title)
-        _content = State(initialValue: entry.content)
+        _title = State(initialValue: entry.wrappedValue.title)
+        _content = State(initialValue: entry.wrappedValue.content)
     }
     
     var body: some View {
@@ -32,7 +32,10 @@ struct DiaryEditEntryView: View {
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Save") {
-                        viewModel.updateEntry(entry, title: title, content: content)
+                        // Update the entry directly through the binding
+                        entry.title = title
+                        entry.content = content
+                        entry.date = Date()
                         dismiss()
                     }.disabled(title.isEmpty || content.isEmpty)
                 }
@@ -44,7 +47,7 @@ struct DiaryEditEntryView: View {
 struct DiaryEditEntryView_Previews: PreviewProvider {
     static var previews: some View {
         let vm = DiaryViewModel()
-        let entry = DiaryEntry(title: "Sample", content: "Sample content")
-        return DiaryEditEntryView(entry: entry, viewModel: vm)
+        let sampleEntry = DiaryEntry(title: "Sample", content: "Sample content")
+        return DiaryEditEntryView(entry: .constant(sampleEntry), viewModel: vm)
     }
 } 
