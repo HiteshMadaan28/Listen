@@ -3,6 +3,7 @@ import SwiftUI
 struct ProfileView: View {
     @EnvironmentObject var coordinator: AppCoordinator
     @StateObject private var viewModel: ProfileViewModel
+    @State private var showEditProfile = false
     
     init() {
         // The actual DiaryViewModel will be injected via .environmentObject in MainTabView
@@ -11,7 +12,6 @@ struct ProfileView: View {
     }
     
     var body: some View {
-        NavigationView {
             VStack(spacing: 0) {
                 // Header
                 VStack(spacing: 12) {
@@ -47,7 +47,7 @@ struct ProfileView: View {
                         .foregroundColor(.gray)
                     
                     Button("Edit Profile") {
-                        viewModel.editProfile()
+                        showEditProfile = true
                     }
                     .buttonStyle(.bordered)
                     .padding(.top, 4)
@@ -102,7 +102,10 @@ struct ProfileView: View {
             }
             .background(Color(.systemBackground))
             .padding(.bottom)
-        }
+            .navigationDestination(isPresented: $showEditProfile) {
+                EditProfileView(viewModel: EditProfileViewModel())
+            }
+        
     }
 }
 
