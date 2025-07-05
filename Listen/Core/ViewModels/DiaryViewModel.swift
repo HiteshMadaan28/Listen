@@ -1,6 +1,6 @@
 import Foundation
 import SwiftUI
-internal import Combine
+import Combine
 
 class DiaryViewModel: ObservableObject {
     @Published var entries: [DiaryEntry] = [] {

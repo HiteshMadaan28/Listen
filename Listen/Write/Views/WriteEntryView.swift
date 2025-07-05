@@ -1,14 +1,17 @@
 import SwiftUI
 
-struct DiaryEditorView: View {
-    @ObservedObject var viewModel: DiaryViewModel
+struct WriteEntryView: View {
+    @EnvironmentObject var coordinator: AppCoordinator
     @Environment(\.dismiss) private var dismiss
     @State private var title: String = ""
     @State private var content: String = ""
     @State private var selectedMood: String = ""
     @State private var date: Date = Date()
+    @State private var showConfirmAlert = false
     
     let moods = ["🥲", "😌", "😐", "😊", "😄"]
+    
+
     
     var body: some View {
         NavigationView {
@@ -95,26 +98,37 @@ struct DiaryEditorView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
-                    Button(action: { dismiss() }) {
+                    Button(action: { coordinator.selectedTab = 0}) {
                         Image(systemName: "chevron.left")
                     }
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button(action: {
-                        viewModel.addEntry(title: title, content: content, mood: selectedMood)
-                        dismiss()
+                        showConfirmAlert = true
                     }) {
                         Image(systemName: "checkmark")
                     }
                     .disabled(content.isEmpty)
                 }
             }
+            .alert("Confirm Entry", isPresented: $showConfirmAlert) {
+                                    Button("Confirm", role: .destructive) {
+                        coordinator.sharedDiaryViewModel.addEntry(title: title, content: content, mood: selectedMood)
+                        title = ""
+                        content = ""
+                        selectedMood = ""
+                        dismiss()
+                    }
+                Button("Cancel", role: .cancel) {}
+            } message: {
+                Text("Are you sure you want to save this entry?")
+            }
         }
     }
 }
 
-struct DiaryEditorView_Previews: PreviewProvider {
+struct WriteEntryView_Previews: PreviewProvider {
     static var previews: some View {
-        DiaryEditorView(viewModel: DiaryViewModel())
+        WriteEntryView()
     }
 } 

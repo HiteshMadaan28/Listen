@@ -46,7 +46,7 @@ struct DiaryEditEntryView: View {
 
 struct DiaryEditEntryView_Previews: PreviewProvider {
     static var previews: some View {
-        let vm = DiaryViewModel()
+        let vm = AppCoordinator().sharedDiaryViewModel
         let sampleEntry = DiaryEntry(title: "Sample", content: "Sample content")
         return DiaryEditEntryView(entry: .constant(sampleEntry), viewModel: vm)
     }

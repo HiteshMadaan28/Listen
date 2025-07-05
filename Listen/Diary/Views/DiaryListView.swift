@@ -2,17 +2,11 @@ import SwiftUI
 
 struct DiaryListView: View {
     @EnvironmentObject var coordinator: AppCoordinator
-    @ObservedObject private var viewModel: DiaryViewModel
     @State private var showingEditor = false
     @State private var selectedEntry: DiaryEntry? = nil
     @State private var selectedMood: String = ""
     @State private var showAllEntries = false
     @State private var navigateToWriteEntry = false
-    
-    init() {
-        // Use the shared view model from the coordinator
-        _viewModel = ObservedObject(wrappedValue: AppCoordinator().sharedDiaryViewModel)
-    }
     
     var body: some View {
         NavigationView {
@@ -36,7 +30,7 @@ struct DiaryListView: View {
                     Divider()
                     
                     // Today's Entry
-                    if let entry = viewModel.entries.first(where: { Calendar.current.isDateInToday($0.date) }) {
+                    if let entry = coordinator.sharedDiaryViewModel.entries.first(where: { Calendar.current.isDateInToday($0.date) }) {
                         VStack(alignment: .leading, spacing: 8) {
                             HStack {
                                 Text("Today")
@@ -96,7 +90,7 @@ struct DiaryListView: View {
                     .padding(.horizontal)
                     
                     VStack(spacing: 8) {
-                        let recentEntries = Array(viewModel.entries.prefix(5))
+                        let recentEntries = Array(coordinator.sharedDiaryViewModel.entries.prefix(5))
                         if recentEntries.isEmpty {
                             Text("No recent entries.")
                                 .foregroundColor(.gray)
@@ -130,11 +124,12 @@ struct DiaryListView: View {
                     .padding(.bottom, 60)
                 }
             }
+            .scrollIndicators(.hidden)
             .sheet(item: $selectedEntry) { entry in
-                DiaryDetailView(viewModel: viewModel, entryId: entry.id)
+                DiaryDetailView(viewModel: coordinator.sharedDiaryViewModel, entryId: entry.id)
             }
             .sheet(isPresented: $showAllEntries) {
-                AllEntriesView(viewModel: viewModel, onSelect: { entry in
+                AllEntriesView(viewModel: coordinator.sharedDiaryViewModel, onSelect: { entry in
                     selectedEntry = entry
                     showAllEntries = false
                 })
