@@ -3,33 +3,28 @@ import SwiftUI
 import Combine
 
 class EditProfileViewModel: ObservableObject {
-    @Published var name: String = "Sarah Johnson"
-    @Published var email: String = "sarah.johnson@email.com"
-    @Published var bio: String = "Passionate about self-reflection and mindful living. Writing helps me process thoughts and emotions."
-    @Published var memberSince: Date = Date()
-    @Published var preferredWritingTime: WritingTime = .evening
-    @Published var dailyReminders: Bool = true
-    @Published var streakCelebrations: Bool = true
-    @Published var weeklyInsights: Bool = false
-    @Published var appLock: Bool = true
-    @Published var iCloudSync: Bool = true
+    @Published var name: String
+    @Published var email: String
+    @Published var bio: String
+    @Published var memberSince: Date
+    @Published var preferredWritingTime: UserProfile.WritingTime
+    @Published var dailyReminders: Bool
+    var onSave: ((String, String, String, Date, UserProfile.WritingTime, Bool) -> Void)?
     
-    enum WritingTime: String, CaseIterable {
-        case morning, afternoon, evening, night
-        var displayName: String {
-            switch self {
-            case .morning: return "Morning (6 AM - 12 PM)"
-            case .afternoon: return "Afternoon (12 PM - 6 PM)"
-            case .evening: return "Evening (6 PM - 12 AM)"
-            case .night: return "Night (12 AM - 6 AM)"
-            }
-        }
+    init(name: String, email: String, bio: String, memberSince: Date, preferredWritingTime: UserProfile.WritingTime, dailyReminders: Bool, onSave: ((String, String, String, Date, UserProfile.WritingTime, Bool) -> Void)? = nil) {
+        self.name = name
+        self.email = email
+        self.bio = bio
+        self.memberSince = memberSince
+        self.preferredWritingTime = preferredWritingTime
+        self.dailyReminders = dailyReminders
+        self.onSave = onSave
     }
     
     func changePhoto() {
         // Handle photo change
     }
     func saveChanges() {
-        // Save profile changes
+        onSave?(name, email, bio, memberSince, preferredWritingTime, dailyReminders)
     }
 } 

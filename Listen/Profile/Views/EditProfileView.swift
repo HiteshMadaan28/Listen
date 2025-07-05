@@ -79,43 +79,15 @@ struct EditProfileView: View {
                     VStack(alignment: .leading, spacing: 4) {
                         Text("Preferred Writing Time").font(.caption)
                         Picker("Preferred Writing Time", selection: $viewModel.preferredWritingTime) {
-                            ForEach(EditProfileViewModel.WritingTime.allCases, id: \.self) { time in
+                            ForEach(UserProfile.WritingTime.allCases, id: \.self) { time in
                                 Text(time.displayName).tag(time)
                             }
                         }
                         .pickerStyle(.menu)
                     }
-                    // Notification Preferences
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Notification Preferences").font(.caption)
-                        Toggle(isOn: $viewModel.dailyReminders) {
-                            VStack(alignment: .leading) {
-                                Text("Daily Reminders")
-                                Text("Get reminded to write daily").font(.caption2).foregroundColor(.gray)
-                            }
-                        }
-                        Toggle(isOn: $viewModel.streakCelebrations) {
-                            VStack(alignment: .leading) {
-                                Text("Streak Celebrations")
-                                Text("Celebrate writing streaks").font(.caption2).foregroundColor(.gray)
-                            }
-                        }
-                        Toggle(isOn: $viewModel.weeklyInsights) {
-                            VStack(alignment: .leading) {
-                                Text("Weekly Insights")
-                                Text("Get weekly mood summaries").font(.caption2).foregroundColor(.gray)
-                            }
-                        }
-                    }
-                    // Privacy Settings
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Privacy Settings").font(.caption)
-                        Toggle(isOn: $viewModel.appLock) {
-                            Text("App Lock")
-                        }
-                        Toggle(isOn: $viewModel.iCloudSync) {
-                            Text("iCloud Sync")
-                        }
+                    // Daily Reminders
+                    Toggle(isOn: $viewModel.dailyReminders) {
+                        Text("Daily Reminders")
                     }
                     // Save/Cancel Buttons
                     Button(action: {
@@ -147,6 +119,6 @@ struct EditProfileView: View {
 
 struct EditProfileView_Previews: PreviewProvider {
     static var previews: some View {
-        EditProfileView(viewModel: EditProfileViewModel())
+        EditProfileView(viewModel: EditProfileViewModel(name: "Sarah Johnson", email: "sarah@email.com", bio: "Bio", memberSince: Date(), preferredWritingTime: .evening, dailyReminders: true))
     }
 } 
