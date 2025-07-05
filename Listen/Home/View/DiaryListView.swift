@@ -69,7 +69,7 @@ struct DiaryListView: View {
                     
                     // New Entry & Calendar Buttons
                     HStack(spacing: 12) {
-                        Button(action: { navigateToWriteEntry = true }) {
+                        Button(action: { coordinator.selectedTab = 2 }) {
                             HStack {
                                 Image(systemName: "plus")
                                 Text("New Entry")
@@ -88,11 +88,6 @@ struct DiaryListView: View {
                     }
                     .padding(.horizontal)
                     
-                    // Hidden NavigationLink for WriteEntryView
-                    NavigationLink(destination: WriteEntryView(viewModel: viewModel), isActive: $navigateToWriteEntry) {
-                        EmptyView()
-                    }
-                    .hidden()
                     
                     // Mood Selection
                     VStack(alignment: .leading, spacing: 4) {
@@ -171,7 +166,7 @@ struct DiaryListView: View {
                     Spacer()
                     HStack {
                         Spacer()
-                        Button(action: { navigateToWriteEntry = true }) {
+                        Button(action: { coordinator.selectedTab = 2 }) {
                             Image(systemName: "pencil.circle.fill")
                                 .resizable()
                                 .frame(width: 56, height: 56)
@@ -187,6 +182,7 @@ struct DiaryListView: View {
 }
 
 struct AllEntriesView: View {
+    @Environment(\.dismiss) private var dismiss
     @ObservedObject var viewModel: DiaryViewModel
     var onSelect: (DiaryEntry) -> Void
     
@@ -207,7 +203,9 @@ struct AllEntriesView: View {
             .navigationTitle("All Entries")
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Close") { onSelect(DiaryEntry(id: UUID(), title: "", content: "", date: Date(), mood: "")) }
+                    Button("Close") {
+                        dismiss()
+                    }
                 }
             }
         }

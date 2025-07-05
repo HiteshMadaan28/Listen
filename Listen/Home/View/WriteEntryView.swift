@@ -3,6 +3,7 @@ import SwiftUI
 struct WriteEntryView: View {
     @ObservedObject var viewModel: DiaryViewModel = DiaryViewModel()
     @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject var coordinator: AppCoordinator
     @State private var title: String = ""
     @State private var content: String = ""
     @State private var selectedMood: String = ""
@@ -96,7 +97,7 @@ struct WriteEntryView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
-                    Button(action: { dismiss() }) {
+                    Button(action: { coordinator.selectedTab = 0}) {
                         Image(systemName: "chevron.left")
                     }
                 }
