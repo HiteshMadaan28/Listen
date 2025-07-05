@@ -13,6 +13,11 @@ class ProfileViewModel: ObservableObject {
     @Published var totalEntries: Int = 0
     @Published var todaysEntry: Int = 0
     @Published var streakDays: Int = 0
+    @Published var avatarImage: UIImage? = nil {
+        didSet {
+            UserProfile.saveAvatar(avatarImage)
+        }
+    }
     
     // App Settings (stubbed for now)
     @Published var appLockType: String = "Face ID"
@@ -31,6 +36,7 @@ class ProfileViewModel: ObservableObject {
         if let profile = UserProfile.load() {
             update(from: profile)
         }
+        avatarImage = UserProfile.loadAvatar()
         // Observe diary entries and update stats
         diaryViewModel.$entries
             .sink { [weak self] _ in
@@ -49,6 +55,7 @@ class ProfileViewModel: ObservableObject {
         preferredWritingTime = profile.preferredWritingTime
         dailyReminders = profile.dailyReminders
         // totalEntries, todaysEntry, streakDays are dynamic
+        avatarImage = UserProfile.loadAvatar()
     }
     
     func toUserProfile() -> UserProfile {
@@ -68,6 +75,12 @@ class ProfileViewModel: ObservableObject {
     func save() {
         let profile = toUserProfile()
         profile.save()
+        UserProfile.saveAvatar(avatarImage)
+    }
+    
+    func updateAvatar(_ image: UIImage?) {
+        avatarImage = image
+        UserProfile.saveAvatar(image)
     }
     
     private func updateStatsFromEntries() {

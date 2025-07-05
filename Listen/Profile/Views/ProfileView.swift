@@ -32,11 +32,19 @@ struct ProfileView: View {
                 .padding(.top, 12)
                 
                 // Avatar
-                Image(systemName: "person.crop.circle")
-                    .resizable()
-                    .frame(width: 72, height: 72)
-                    .clipShape(Circle())
-                    .padding(.top, 8)
+                if let avatarImage = viewModel.avatarImage {
+                    Image(uiImage: avatarImage)
+                        .resizable()
+                        .frame(width: 72, height: 72)
+                        .clipShape(Circle())
+                        .padding(.top, 8)
+                } else {
+                    Image(systemName: "person.crop.circle")
+                        .resizable()
+                        .frame(width: 72, height: 72)
+                        .clipShape(Circle())
+                        .padding(.top, 8)
+                }
                 
                 // Name & Join Date
                 Text(viewModel.name)
@@ -113,13 +121,15 @@ struct ProfileView: View {
                     memberSince: viewModel.memberSince,
                     preferredWritingTime: viewModel.preferredWritingTime,
                     dailyReminders: viewModel.dailyReminders,
-                    onSave: { name, email, bio, memberSince, preferredWritingTime, dailyReminders in
+                    avatarImage: viewModel.avatarImage,
+                    onSave: { name, email, bio, memberSince, preferredWritingTime, dailyReminders, avatarImage in
                         viewModel.name = name
                         viewModel.email = email
                         viewModel.bio = bio
                         viewModel.memberSince = memberSince
                         viewModel.preferredWritingTime = preferredWritingTime
                         viewModel.dailyReminders = dailyReminders
+                        viewModel.updateAvatar(avatarImage)
                         viewModel.save()
                     }
                 )

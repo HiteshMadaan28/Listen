@@ -1,4 +1,5 @@
 import Foundation
+import UIKit
 
 struct UserProfile: Codable, Equatable {
     var name: String
@@ -25,6 +26,7 @@ struct UserProfile: Codable, Equatable {
     
     // UserDefaults helpers
     private static let userDefaultsKey = "user_profile_key"
+    private static let avatarKey = "user_profile_avatar"
     
     static func load() -> UserProfile? {
         guard let data = UserDefaults.standard.data(forKey: userDefaultsKey) else { return nil }
@@ -39,5 +41,22 @@ struct UserProfile: Codable, Equatable {
     
     static func clear() {
         UserDefaults.standard.removeObject(forKey: userDefaultsKey)
+        clearAvatar()
+    }
+    
+    // MARK: - Avatar Storage
+    static func loadAvatar() -> UIImage? {
+        guard let data = UserDefaults.standard.data(forKey: avatarKey) else { return nil }
+        return UIImage(data: data)
+    }
+    static func saveAvatar(_ image: UIImage?) {
+        if let image = image, let data = image.jpegData(compressionQuality: 0.9) {
+            UserDefaults.standard.set(data, forKey: avatarKey)
+        } else {
+            clearAvatar()
+        }
+    }
+    static func clearAvatar() {
+        UserDefaults.standard.removeObject(forKey: avatarKey)
     }
 } 

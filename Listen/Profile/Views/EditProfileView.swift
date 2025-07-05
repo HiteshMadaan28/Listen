@@ -1,8 +1,10 @@
 import SwiftUI
+import PhotosUI
 
 struct EditProfileView: View {
     @ObservedObject var viewModel: EditProfileViewModel
     @Environment(\.dismiss) private var dismiss
+    @State private var selectedPhoto: PhotosPickerItem? = nil
     
     var body: some View {
         VStack(spacing: 0) {
@@ -30,21 +32,37 @@ struct EditProfileView: View {
                     // Avatar
                     VStack(spacing: 8) {
                         ZStack(alignment: .bottomTrailing) {
-                            Image(systemName: "person.crop.circle")
-                                .resizable()
-                                .frame(width: 80, height: 80)
-                                .clipShape(Circle())
-                            Button(action: viewModel.changePhoto) {
-                                Image(systemName: "camera")
-                                    .padding(6)
-                                    .background(Color.white)
-                                    .clipShape(Circle())
-                                    .shadow(radius: 2)
+                            PhotosPicker(selection: $selectedPhoto, matching: .images, photoLibrary: .shared()) {
+                                if let avatarImage = viewModel.avatarImage {
+                                    Image(uiImage: avatarImage)
+                                        .resizable()
+                                        .frame(width: 80, height: 80)
+                                        .clipShape(Circle())
+                                } else {
+                                    Image(systemName: "person.crop.circle")
+                                        .resizable()
+                                        .frame(width: 80, height: 80)
+                                        .clipShape(Circle())
+                                }
                             }
-                            .offset(x: 8, y: 8)
+                            .onChange(of: selectedPhoto) { newItem in
+                                if let newItem = newItem {
+                                    Task {
+                                        if let data = try? await newItem.loadTransferable(type: Data.self),
+                                           let uiImage = UIImage(data: data) {
+                                            viewModel.avatarImage = uiImage
+                                        }
+                                    }
+                                }
+                            }
+                            Image(systemName: "camera")
+                                .padding(6)
+                                .background(Color.white)
+                                .clipShape(Circle())
+                                .shadow(radius: 2)
+                                .offset(x: 8, y: 8)
                         }
-                        Button("Change Photo", action: viewModel.changePhoto)
-                            .buttonStyle(.bordered)
+                       
                     }
                     
                     // Full Name
@@ -116,9 +134,3 @@ struct EditProfileView: View {
         .navigationBarHidden(true)
     }
 }
-
-struct EditProfileView_Previews: PreviewProvider {
-    static var previews: some View {
-        EditProfileView(viewModel: EditProfileViewModel(name: "Sarah Johnson", email: "sarah@email.com", bio: "Bio", memberSince: Date(), preferredWritingTime: .evening, dailyReminders: true))
-    }
-} 
