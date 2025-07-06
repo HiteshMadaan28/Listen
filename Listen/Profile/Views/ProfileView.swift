@@ -2,12 +2,13 @@ import SwiftUI
 
 struct ProfileView: View {
     @EnvironmentObject var coordinator: AppCoordinator
+    @EnvironmentObject var diaryViewModel: DiaryViewModel
     @StateObject private var viewModel: ProfileViewModel
     @State private var showEditProfile = false
     
     init() {
-        // The actual DiaryViewModel will be injected via .environmentObject in MainTabView
-        _viewModel = StateObject(wrappedValue: ProfileViewModel(diaryViewModel: AppCoordinator().sharedDiaryViewModel))
+        // Initialize with a temporary DiaryViewModel, will be updated via environment
+        _viewModel = StateObject(wrappedValue: ProfileViewModel(diaryViewModel: DiaryViewModel()))
     }
     
     var body: some View {
@@ -134,6 +135,10 @@ struct ProfileView: View {
                     }
                 )
             )
+        }
+        .onAppear {
+            // Update the ProfileViewModel to use the shared DiaryViewModel
+            viewModel.updateDiaryViewModel(diaryViewModel)
         }
     }
 }

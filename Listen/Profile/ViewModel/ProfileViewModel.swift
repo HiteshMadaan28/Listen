@@ -28,7 +28,7 @@ class ProfileViewModel: ObservableObject {
     @Published var appVersion: String = "v1.2.0"
     
     private var cancellables = Set<AnyCancellable>()
-    private let diaryViewModel: DiaryViewModel
+    private var diaryViewModel: DiaryViewModel
     
     // Init
     init(diaryViewModel: DiaryViewModel) {
@@ -43,7 +43,36 @@ class ProfileViewModel: ObservableObject {
                 self?.updateStatsFromEntries()
             }
             .store(in: &cancellables)
+        
+        // Listen for diary entries changes
+        NotificationCenter.default.addObserver(
+            forName: .diaryEntriesChanged,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            print("ProfileViewModel: Received diary entries changed notification")
+            self?.updateStatsFromEntries()
+        }
+        
         // Initial calculation
+        updateStatsFromEntries()
+    }
+    
+    func updateDiaryViewModel(_ newDiaryViewModel: DiaryViewModel) {
+        // Cancel previous subscriptions
+        cancellables.removeAll()
+        
+        // Update the diary view model
+        self.diaryViewModel = newDiaryViewModel
+        
+        // Re-observe diary entries and update stats
+        diaryViewModel.$entries
+            .sink { [weak self] _ in
+                self?.updateStatsFromEntries()
+            }
+            .store(in: &cancellables)
+        
+        // Recalculate stats with the new diary view model
         updateStatsFromEntries()
     }
     
@@ -98,6 +127,9 @@ class ProfileViewModel: ObservableObject {
             currentDay = previousDay
         }
         streakDays = streak
+        
+        print("ProfileViewModel: Updated stats - Total: \(totalEntries), Today: \(todaysEntry), Streak: \(streakDays)")
+        
         // Save updated stats
         save()
     }

@@ -103,12 +103,15 @@ struct WriteEntryView: View {
                     }
                 }
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button(action: {
-                        showConfirmAlert = true
-                    }) {
-                        Image(systemName: "checkmark")
+                    HStack {
+                        
+                        Button(action: {
+                            showConfirmAlert = true
+                        }) {
+                            Image(systemName: "checkmark")
+                        }
+                        .disabled(content.isEmpty)
                     }
-                    .disabled(content.isEmpty)
                 }
             }
             .alert("Confirm Entry", isPresented: $showConfirmAlert) {

@@ -7,6 +7,7 @@ struct MainTabView: View {
         NavigationStack{
             TabView(selection: $coordinator.selectedTab) {
                 DiaryListView()
+                    .environmentObject(coordinator.sharedDiaryViewModel)
                     .tabItem {
                         Image(systemName: "book")
                         Text("Diary")
@@ -14,6 +15,7 @@ struct MainTabView: View {
                     .tag(0)
                     .environmentObject(coordinator)
                 CalendarView()
+                    .environmentObject(coordinator.sharedDiaryViewModel)
                     .tabItem {
                         Image(systemName: "calendar")
                         Text("Calendar")
@@ -21,6 +23,7 @@ struct MainTabView: View {
                     .tag(1)
                     .environmentObject(coordinator)
                 WriteEntryView()
+                    .environmentObject(coordinator.sharedDiaryViewModel)
                     .tabItem {
                         Image(systemName: "plus.circle")
                         Text("Write")
@@ -28,6 +31,7 @@ struct MainTabView: View {
                     .tag(2)
                     .environmentObject(coordinator)
                 InsightsView()
+                    .environmentObject(coordinator.sharedDiaryViewModel)
                     .tabItem {
                         Image(systemName: "chart.bar")
                         Text("Insights")
@@ -35,6 +39,7 @@ struct MainTabView: View {
                     .tag(3)
                     .environmentObject(coordinator)
                 ProfileView()
+                    .environmentObject(coordinator.sharedDiaryViewModel)
                     .tabItem {
                         Image(systemName: "person")
                         Text("Profile")

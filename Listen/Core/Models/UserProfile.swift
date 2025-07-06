@@ -27,36 +27,54 @@ struct UserProfile: Codable, Equatable {
     // UserDefaults helpers
     private static let userDefaultsKey = "user_profile_key"
     private static let avatarKey = "user_profile_avatar"
+    private static let sharedDefaults = UserDefaults(suiteName: "group.com.LoadUserData")
     
     static func load() -> UserProfile? {
-        guard let data = UserDefaults.standard.data(forKey: userDefaultsKey) else { return nil }
-        return try? JSONDecoder().decode(UserProfile.self, from: data)
+        // Try to load from shared container first, then fallback to standard
+        var data = sharedDefaults?.data(forKey: userDefaultsKey)
+        if data == nil {
+            data = UserDefaults.standard.data(forKey: userDefaultsKey)
+        }
+        
+        guard let profileData = data else { return nil }
+        return try? JSONDecoder().decode(UserProfile.self, from: profileData)
     }
     
     func save() {
         if let data = try? JSONEncoder().encode(self) {
+            // Save to both standard UserDefaults and shared container
             UserDefaults.standard.set(data, forKey: UserProfile.userDefaultsKey)
+            UserProfile.sharedDefaults?.set(data, forKey: UserProfile.userDefaultsKey)
+            print("UserProfile: Saved profile to UserDefaults and shared container")
         }
     }
     
     static func clear() {
         UserDefaults.standard.removeObject(forKey: userDefaultsKey)
+        sharedDefaults?.removeObject(forKey: userDefaultsKey)
         clearAvatar()
     }
     
     // MARK: - Avatar Storage
     static func loadAvatar() -> UIImage? {
-        guard let data = UserDefaults.standard.data(forKey: avatarKey) else { return nil }
-        return UIImage(data: data)
+        // Try to load from shared container first, then fallback to standard
+        var data = sharedDefaults?.data(forKey: avatarKey)
+        if data == nil {
+            data = UserDefaults.standard.data(forKey: avatarKey)
+        }
+        return data.flatMap { UIImage(data: $0) }
     }
     static func saveAvatar(_ image: UIImage?) {
         if let image = image, let data = image.jpegData(compressionQuality: 0.9) {
+            // Save to both standard UserDefaults and shared container
             UserDefaults.standard.set(data, forKey: avatarKey)
+            sharedDefaults?.set(data, forKey: avatarKey)
         } else {
             clearAvatar()
         }
     }
     static func clearAvatar() {
         UserDefaults.standard.removeObject(forKey: avatarKey)
+        sharedDefaults?.removeObject(forKey: avatarKey)
     }
 } 

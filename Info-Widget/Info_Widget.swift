@@ -9,51 +9,150 @@ import WidgetKit
 import SwiftUI
 
 struct Provider: TimelineProvider {
-    func placeholder(in context: Context) -> SimpleEntry {
-        SimpleEntry(date: Date(), emoji: "😀")
+    func placeholder(in context: Context) -> DiaryStatsEntry {
+        DiaryStatsEntry(
+            date: Date(),
+            recentEntry: "No entries yet",
+            totalEntries: 0,
+            todayEntries: 0,
+            streakDays: 0
+        )
     }
 
-    func getSnapshot(in context: Context, completion: @escaping (SimpleEntry) -> ()) {
-        let entry = SimpleEntry(date: Date(), emoji: "😀")
+    func getSnapshot(in context: Context, completion: @escaping (DiaryStatsEntry) -> ()) {
+        let entry = getDiaryStats()
         completion(entry)
     }
 
     func getTimeline(in context: Context, completion: @escaping (Timeline<Entry>) -> ()) {
-        var entries: [SimpleEntry] = []
-
-        // Generate a timeline consisting of five entries an hour apart, starting from the current date.
-        let currentDate = Date()
-        for hourOffset in 0 ..< 5 {
-            let entryDate = Calendar.current.date(byAdding: .hour, value: hourOffset, to: currentDate)!
-            let entry = SimpleEntry(date: entryDate, emoji: "😀")
-            entries.append(entry)
-        }
-
-        let timeline = Timeline(entries: entries, policy: .atEnd)
+        let entry = getDiaryStats()
+        let timeline = Timeline(entries: [entry], policy: .after(Date().addingTimeInterval(15 * 60))) // Refresh every 15 minutes
         completion(timeline)
     }
-
-//    func relevances() async -> WidgetRelevances<Void> {
-//        // Generate a list containing the contexts this widget is relevant in.
-//    }
+    
+    private func getDiaryStats() -> DiaryStatsEntry {
+        let sharedDefaults = UserDefaults(suiteName: "group.com.LoadUserData")
+        
+        // Get diary entries
+        let entries = loadDiaryEntries(sharedDefaults)
+        let totalEntries = entries.count
+        
+        // Calculate today's entries
+        let today = Calendar.current.startOfDay(for: Date())
+        let todayEntries = entries.filter { Calendar.current.isDate($0.date, inSameDayAs: today) }.count
+        
+        // Calculate streak days
+        let streakDays = calculateStreakDays(entries)
+        
+        // Get recent entry title
+        let recentEntry = getRecentEntryTitle(entries)
+        
+        return DiaryStatsEntry(
+            date: Date(),
+            recentEntry: recentEntry,
+            totalEntries: totalEntries,
+            todayEntries: todayEntries,
+            streakDays: streakDays
+        )
+    }
+    //user_profile_key
+    private func loadDiaryEntries(_ sharedDefaults: UserDefaults?) -> [DiaryEntry] {
+        guard let data = sharedDefaults?.data(forKey: "diary_entries_key") else { return [] }
+        do {
+            let entries = try JSONDecoder().decode([DiaryEntry].self, from: data)
+            return entries.sorted { $0.date > $1.date } // Most recent first
+        } catch {
+            print("Failed to load diary entries: \(error)")
+            return []
+        }
+    }
+    
+    private func calculateStreakDays(_ entries: [DiaryEntry]) -> Int {
+        guard !entries.isEmpty else { return 0 }
+        
+        let calendar = Calendar.current
+        let uniqueDays = Set(entries.map { calendar.startOfDay(for: $0.date) })
+        var streak = 0
+        var currentDay = calendar.startOfDay(for: Date())
+        
+        while uniqueDays.contains(currentDay) {
+            streak += 1
+            guard let previousDay = calendar.date(byAdding: .day, value: -1, to: currentDay) else { break }
+            currentDay = previousDay
+        }
+        
+        return streak
+    }
+    
+    private func getRecentEntryTitle(_ entries: [DiaryEntry]) -> String {
+        guard let mostRecentEntry = entries.first else {
+            return "No entries yet"
+        }
+        return mostRecentEntry.title.isEmpty ? "Untitled Entry" : mostRecentEntry.title
+    }
 }
 
-struct SimpleEntry: TimelineEntry {
+struct DiaryEntry: Codable {
+    let id: UUID
+    var title: String
+    var content: String
+    var date: Date
+    var mood: String
+}
+
+struct DiaryStatsEntry: TimelineEntry {
     let date: Date
-    let emoji: String
+    let recentEntry: String
+    let totalEntries: Int
+    let todayEntries: Int
+    let streakDays: Int
 }
 
 struct Info_WidgetEntryView : View {
     var entry: Provider.Entry
 
     var body: some View {
-        VStack {
-            Text("Time:")
-            Text(entry.date, style: .time)
-
-            Text("Emoji:")
-            Text(entry.emoji)
+        VStack(spacing: 8) {
+            // Recent Entry
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Recent Entry")
+                    .font(.caption2)
+                    .foregroundColor(.secondary)
+                Text(entry.recentEntry)
+                    .font(.caption)
+                    .fontWeight(.medium)
+                    .lineLimit(2)
+                    .multilineTextAlignment(.leading)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            
+            Divider()
+            
+            // Statistics
+            HStack(spacing: 12) {
+                StatView(title: "Total", value: "\(entry.totalEntries)")
+                StatView(title: "Today", value: "\(entry.todayEntries)")
+                StatView(title: "Streak", value: "\(entry.streakDays)")
+            }
         }
+        .padding(12)
+    }
+}
+
+struct StatView: View {
+    let title: String
+    let value: String
+    
+    var body: some View {
+        VStack(spacing: 2) {
+            Text(value)
+                .font(.title2)
+                .fontWeight(.bold)
+            Text(title)
+                .font(.caption2)
+                .foregroundColor(.secondary)
+        }
+        .frame(maxWidth: .infinity)
     }
 }
 
@@ -71,14 +170,14 @@ struct Info_Widget: Widget {
                     .background()
             }
         }
-        .configurationDisplayName("My Widget")
-        .description("This is an example widget.")
+        .configurationDisplayName("Diary Stats")
+        .description("View your diary statistics and recent entries.")
     }
 }
 
 #Preview(as: .systemSmall) {
     Info_Widget()
 } timeline: {
-    SimpleEntry(date: .now, emoji: "😀")
-    SimpleEntry(date: .now, emoji: "🤩")
+    DiaryStatsEntry(date: .now, recentEntry: "My first entry", totalEntries: 15, todayEntries: 2, streakDays: 5)
+    DiaryStatsEntry(date: .now, recentEntry: "No entries yet", totalEntries: 0, todayEntries: 0, streakDays: 0)
 }
