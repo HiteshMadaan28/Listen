@@ -1,4 +1,5 @@
 import SwiftUI
+import WidgetKit
 
 struct WriteEntryView: View {
     @EnvironmentObject var coordinator: AppCoordinator
@@ -115,13 +116,20 @@ struct WriteEntryView: View {
                 }
             }
             .alert("Confirm Entry", isPresented: $showConfirmAlert) {
-                                    Button("Confirm", role: .destructive) {
-                        coordinator.sharedDiaryViewModel.addEntry(title: title, content: content, mood: selectedMood)
-                        title = ""
-                        content = ""
-                        selectedMood = ""
-                        dismiss()
+                Button("Confirm", role: .destructive) {
+                    coordinator.sharedDiaryViewModel.addEntry(title: title, content: content, mood: selectedMood)
+                    title = ""
+                    content = ""
+                    selectedMood = ""
+                    
+                    // Reload widget timeline after adding entry
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                        print("Reloading widget timeline on main thread...")
+                        WidgetCenter.shared.reloadTimelines(ofKind: "Info_Widget")
                     }
+                    
+                    dismiss()
+                }
                 Button("Cancel", role: .cancel) {}
             } message: {
                 Text("Are you sure you want to save this entry?")

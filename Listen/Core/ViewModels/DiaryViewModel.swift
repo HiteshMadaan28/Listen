@@ -1,6 +1,7 @@
 import Foundation
 import SwiftUI
 import Combine
+import WidgetKit
 
 class DiaryViewModel: ObservableObject {
     @Published var entries: [DiaryEntry] = [] {
@@ -8,6 +9,8 @@ class DiaryViewModel: ObservableObject {
             saveEntries()
             // Notify that entries have changed (for ProfileViewModel)
             NotificationCenter.default.post(name: .diaryEntriesChanged, object: nil)
+            // Reload widget timeline when entries change
+            reloadWidgetTimeline()
         }
     }
     
@@ -52,6 +55,28 @@ class DiaryViewModel: ObservableObject {
             print("DiaryViewModel: Saved test data to UserDefaults and shared container")
         } catch {
             print("Failed to save entries: \(error)")
+        }
+    }
+    
+    // MARK: - Widget Timeline Reload
+    private func reloadWidgetTimeline() {
+        // Check if the widget exists before reloading
+        WidgetCenter.shared.getCurrentConfigurations { result in
+            guard case .success(let widgets) = result else { 
+                print("DiaryViewModel: Failed to get widget configurations")
+                return 
+            }
+            
+            // Check if our specific widget exists
+            if let widget = widgets.first(where: { $0.kind == "Info_Widget" }) {
+                // Reload the specific widget timeline
+                WidgetCenter.shared.reloadTimelines(ofKind: "Info_Widget")
+                print("DiaryViewModel: Reloaded widget timeline for \(self.entries.count) entries")
+            } else {
+                // Widget doesn't exist, reload all timelines as fallback
+                WidgetCenter.shared.reloadAllTimelines()
+                print("DiaryViewModel: Widget not found, reloaded all timelines")
+            }
         }
     }
     

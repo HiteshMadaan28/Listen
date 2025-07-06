@@ -26,12 +26,25 @@ struct Provider: TimelineProvider {
 
     func getTimeline(in context: Context, completion: @escaping (Timeline<Entry>) -> ()) {
         let entry = getDiaryStats()
-        let timeline = Timeline(entries: [entry], policy: .after(Date().addingTimeInterval(15 * 60))) // Refresh every 15 minutes
+        // Refresh every 2 minutes for immediate updates when new data is saved
+        let timeline = Timeline(entries: [entry], policy: .after(Date().addingTimeInterval(2 * 60)))
+        completion(timeline)
+    }
+    
+    // Handle immediate timeline updates
+    func getTimelineForImmediateUpdate(in context: Context, completion: @escaping (Timeline<Entry>) -> ()) {
+        let entry = getDiaryStats()
+        // Create timeline with immediate refresh for urgent updates
+        let timeline = Timeline(entries: [entry], policy: .after(Date().addingTimeInterval(30)))
         completion(timeline)
     }
     
     private func getDiaryStats() -> DiaryStatsEntry {
         let sharedDefaults = UserDefaults(suiteName: "group.com.LoadUserData")
+        
+        // Force synchronization to get latest data immediately
+        UserDefaults.standard.synchronize()
+        sharedDefaults?.synchronize()
         
         // Get diary entries
         let entries = loadDiaryEntries(sharedDefaults)
@@ -57,14 +70,27 @@ struct Provider: TimelineProvider {
     }
     //user_profile_key
     private func loadDiaryEntries(_ sharedDefaults: UserDefaults?) -> [DiaryEntry] {
-        guard let data = sharedDefaults?.data(forKey: "diary_entries_key") else { return [] }
-        do {
-            let entries = try JSONDecoder().decode([DiaryEntry].self, from: data)
-            return entries.sorted { $0.date > $1.date } // Most recent first
-        } catch {
-            print("Failed to load diary entries: \(error)")
-            return []
+        // Try shared container first (for widget access)
+        if let sharedDefaults = sharedDefaults, let data = sharedDefaults.data(forKey: "diary_entries_key") {
+            do {
+                let entries = try JSONDecoder().decode([DiaryEntry].self, from: data)
+                return entries.sorted { $0.date > $1.date } // Most recent first
+            } catch {
+                print("Widget: Failed to decode entries from shared container: \(error)")
+            }
         }
+        
+        // Fallback to standard UserDefaults
+        if let data = UserDefaults.standard.data(forKey: "diary_entries_key") {
+            do {
+                let entries = try JSONDecoder().decode([DiaryEntry].self, from: data)
+                return entries.sorted { $0.date > $1.date } // Most recent first
+            } catch {
+                print("Widget: Failed to decode entries from standard UserDefaults: \(error)")
+            }
+        }
+        
+        return []
     }
     
     private func calculateStreakDays(_ entries: [DiaryEntry]) -> Int {

@@ -1,4 +1,5 @@
 import Foundation
+import WidgetKit
 import Combine
 import SwiftUI
 
@@ -132,5 +133,8 @@ class ProfileViewModel: ObservableObject {
         
         // Save updated stats
         save()
+        
+        // Reload widget timeline when stats change
+        WidgetCenter.shared.reloadTimelines(ofKind: "Info_Widget")
     }
 } 
